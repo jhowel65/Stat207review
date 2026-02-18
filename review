@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>STAT 201 Exam 1 Ultimate Review</title>
+<style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg,#ff8200,#58595b);
+  color: white;
+  text-align: center;
+  overflow-x: hidden;
+}
+
+h1 { font-size: 42px; }
+
+button {
+  padding: 12px 25px;
+  margin: 10px;
+  font-size: 16px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+button:hover { transform: scale(1.1); }
+
+.answerBtn {
+  display: block;
+  margin: 12px auto;
+  background: white;
+  color: black;
+  width: 60%;
+}
+
+#scoreBoard {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+}
+
+#timer {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+}
+
+.hidden { display:none; }
+
+.correctFlash { animation: greenFlash 0.4s; }
+.wrongFlash { animation: redFlash 0.4s; }
+
+@keyframes greenFlash {
+  0%{background:#28a745;}
+  100%{background:linear-gradient(135deg,#ff8200,#58595b);}
+}
+@keyframes redFlash {
+  0%{background:#dc3545;}
+  100%{background:linear-gradient(135deg,#ff8200,#58595b);}
+}
+
+.confetti {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  background: yellow;
+  animation: fall 2s linear infinite;
+}
+
+@keyframes fall {
+  0% { transform: translateY(-10px); }
+  100% { transform: translateY(100vh); }
+}
+</style>
+</head>
+<body>
+
+<div id="scoreBoard">Score: 0 | Streak: 0</div>
+<div id="timer">Time: 20</div>
+
+<div id="gameContainer">
+  <h1>🍊 STAT 201 EXAM 1 CHALLENGE 🍊</h1>
+  <button onclick="startGame()">Start Game</button>
+  <button onclick="toggleMusic()">Toggle Music</button>
+  <div id="leaderboard"></div>
+</div>
+
+<audio id="bgMusic" loop>
+  <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6c4f1e.mp3?filename=game-music-loop-110997.mp3">
+</audio>
+
+<script>
+
+let score=0;
+let streak=0;
+let timeLeft=20;
+let timerInterval;
+let currentQuestion;
+
+const conceptualQuestions = [
+{
+q:"A right-skewed distribution has:",
+a:["Mean < Median","Mean = Median","Mean > Median","No center"],
+correct:2
+},
+{
+q:"Which graph compares two quantitative variables?",
+a:["Histogram","Bar chart","Scatterplot","Pie chart"],
+correct:2
+},
+{
+q:"Standard deviation measures:",
+a:["Center","Spread","Shape","Sample size"],
+correct:1
+},
+{
+q:"A boxplot displays:",
+a:["Mean & SD","Five-number summary","Correlation","Slope"],
+correct:1
+},
+{
+q:"If r = -0.85, the relationship is:",
+a:["Strong positive","Weak positive","Strong negative","No relationship"],
+correct:2
+},
+{
+q:"Conditional distribution means:",
+a:["Overall distribution","Given a subgroup","Probability model","Outlier check"],
+correct:1
+}
+];
+
+function generateCalculationQuestion(){
+  let data=[];
+  for(let i=0;i<5;i++){
+    data.push(Math.floor(Math.random()*20)+1);
+  }
+  let mean = (data.reduce((a,b)=>a+b,0)/5).toFixed(1);
+
+  return {
+    q:`Find the mean of: ${data.join(", ")}`,
+    a:[
+      (mean-2).toFixed(1),
+      mean,
+      (mean+1.5).toFixed(1),
+      (mean+3).toFixed(1)
+    ].sort(()=>Math.random()-0.5),
+    correctValue: mean
+  };
+}
+
+function getRandomQuestion(){
+  if(Math.random()<0.5){
+    return conceptualQuestions[Math.floor(Math.random()*conceptualQuestions.length)];
+  } else {
+    return generateCalculationQuestion();
+  }
+}
+
+function startGame(){
+  score=0;
+  streak=0;
+  updateScore();
+  nextQuestion();
+}
+
+function nextQuestion(){
+  clearInterval(timerInterval);
+  timeLeft=20;
+  updateTimer();
+  timerInterval=setInterval(countdown,1000);
+
+  currentQuestion=getRandomQuestion();
+
+  const container=document.getElementById("gameContainer");
+  container.innerHTML=`<h2>${currentQuestion.q}</h2>`;
+
+  currentQuestion.a.forEach((ans,index)=>{
+    const btn=document.createElement("button");
+    btn.className="answerBtn";
+    btn.innerText=ans;
+    btn.onclick=()=>checkAnswer(ans,index);
+    container.appendChild(btn);
+  });
+}
+
+function checkAnswer(ans,index){
+  clearInterval(timerInterval);
+
+  let correct=false;
+
+  if(currentQuestion.correct!==undefined){
+    correct = index===currentQuestion.correct;
+  } else {
+    correct = ans==currentQuestion.correctValue;
+  }
+
+  if(correct){
+    streak++;
+    score+=10+(streak*3);
+    document.body.classList.add("correctFlash");
+  } else {
+    streak=0;
+    document.body.classList.add("wrongFlash");
+  }
+
+  setTimeout(()=>{
+    document.body.classList.remove("correctFlash","wrongFlash");
+    updateScore();
+    if(score>=200){ endGame(); }
+    else nextQuestion();
+  },500);
+}
+
+function countdown(){
+  timeLeft--;
+  updateTimer();
+  if(timeLeft<=0){
+    streak=0;
+    nextQuestion();
+  }
+}
+
+function updateScore(){
+  document.getElementById("scoreBoard").innerText=`Score: ${score} | Streak: ${streak}`;
+}
+
+function updateTimer(){
+  document.getElementById("timer").innerText=`Time: ${timeLeft}`;
+}
+
+function toggleMusic(){
+  const music=document.getElementById("bgMusic");
+  music.paused ? music.play() : music.pause();
+}
+
+function endGame(){
+  const container=document.getElementById("gameContainer");
+  let tier="";
+
+  if(score<80) tier="📘 Needs Review";
+  else if(score<150) tier="📊 Exam Ready";
+  else tier="🏆 STAT Legend";
+
+  container.innerHTML=`<h2>Final Score: ${score}</h2><h3>${tier}</h3><button onclick="location.reload()">Play Again</button>`;
+  saveScore(score);
+  launchConfetti();
+}
+
+function saveScore(score){
+  let scores=JSON.parse(localStorage.getItem("stat201Scores"))||[];
+  scores.push(score);
+  scores.sort((a,b)=>b-a);
+  scores=scores.slice(0,5);
+  localStorage.setItem("stat201Scores",JSON.stringify(scores));
+  displayLeaderboard();
+}
+
+function displayLeaderboard(){
+  let scores=JSON.parse(localStorage.getItem("stat201Scores"))||[];
+  let html="<h3>🏆 Leaderboard</h3>";
+  scores.forEach((s,i)=> html+=`<p>${i+1}. ${s}</p>`);
+  document.getElementById("leaderboard").innerHTML=html;
+}
+
+function launchConfetti(){
+  for(let i=0;i<50;i++){
+    let conf=document.createElement("div");
+    conf.className="confetti";
+    conf.style.left=Math.random()*100+"vw";
+    conf.style.animationDuration=(Math.random()*2+1)+"s";
+    document.body.appendChild(conf);
+  }
+}
+
+displayLeaderboard();
+
+</script>
+</body>
+</html>
