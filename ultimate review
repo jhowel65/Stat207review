@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>STAT 201 Ultimate Review Game</title>
+<style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg,#ff9966,#ff5e62);
+  color: white;
+  text-align: center;
+  overflow: hidden;
+}
+
+#gameContainer {
+  margin-top: 80px;
+}
+
+button {
+  padding: 12px 25px;
+  margin: 10px;
+  font-size: 16px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+button:hover {
+  transform: scale(1.1);
+}
+
+.answerBtn {
+  display: block;
+  margin: 12px auto;
+  background: white;
+  color: black;
+  width: 60%;
+}
+
+#scoreBoard {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  font-size: 18px;
+}
+
+#timer {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 18px;
+}
+
+.fadeIn {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+
+.correctFlash {
+  animation: flashGreen 0.4s;
+}
+
+.wrongFlash {
+  animation: flashRed 0.4s;
+}
+
+@keyframes flashGreen {
+  0% {background: #28a745;}
+  100% {background: linear-gradient(135deg,#ff9966,#ff5e62);}
+}
+
+@keyframes flashRed {
+  0% {background: #dc3545;}
+  100% {background: linear-gradient(135deg,#ff9966,#ff5e62);}
+}
+
+.hidden {
+  display: none;
+}
+</style>
+</head>
+<body>
+
+<div id="scoreBoard">Score: 0 | Streak: 0</div>
+<div id="timer">Time: 15</div>
+
+<div id="gameContainer">
+  <h1>🎓 STAT 201 Ultimate Review</h1>
+  <button onclick="startGame()">Start Game</button>
+</div>
+
+<script>
+
+const questions = [
+{
+q:"Which is a quantitative variable?",
+a:["Eye color","Height in inches","Major","Zip code"],
+correct:1
+},
+{
+q:"What does standard deviation measure?",
+a:["Center","Spread","Shape","Outliers only"],
+correct:1
+},
+{
+q:"A right-skewed distribution has:",
+a:["Mean < Median","Mean = Median","Mean > Median","No center"],
+correct:2
+},
+{
+q:"A boxplot displays which summary?",
+a:["Mean & SD","Five-number summary","Correlation","Probability"],
+correct:1
+},
+{
+q:"Conditional distribution refers to:",
+a:["Given a subgroup","Whole dataset","Outliers only","Sampling error"],
+correct:0
+},
+{
+q:"Which graph compares two quantitative variables?",
+a:["Bar chart","Histogram","Scatterplot","Pie chart"],
+correct:2
+},
+{
+q:"If two variables are independent, then:",
+a:["Conditional = Marginal","Mean increases","SD = 0","Correlation = 1"],
+correct:0
+}
+];
+
+let score = 0;
+let streak = 0;
+let timeLeft = 15;
+let timerInterval;
+let currentQuestion;
+
+function startGame() {
+  score = 0;
+  streak = 0;
+  document.getElementById("gameContainer").innerHTML="";
+  nextQuestion();
+}
+
+function nextQuestion() {
+  clearInterval(timerInterval);
+  timeLeft = 15;
+  updateTimer();
+  timerInterval = setInterval(countdown,1000);
+
+  currentQuestion = questions[Math.floor(Math.random()*questions.length)];
+
+  const container = document.getElementById("gameContainer");
+  container.innerHTML = `<h2 class="fadeIn">${currentQuestion.q}</h2>`;
+
+  currentQuestion.a.forEach((answer,index)=>{
+    const btn = document.createElement("button");
+    btn.className="answerBtn fadeIn";
+    btn.innerText=answer;
+    btn.onclick=()=>checkAnswer(index);
+    container.appendChild(btn);
+  });
+}
+
+function checkAnswer(index){
+  clearInterval(timerInterval);
+
+  if(index===currentQuestion.correct){
+    streak++;
+    score += 10 + (streak*2);
+    document.body.classList.add("correctFlash");
+    setTimeout(()=>document.body.classList.remove("correctFlash"),400);
+  } else {
+    streak = 0;
+    document.body.classList.add("wrongFlash");
+    setTimeout(()=>document.body.classList.remove("wrongFlash"),400);
+  }
+
+  updateScore();
+  setTimeout(nextQuestion,800);
+}
+
+function countdown(){
+  timeLeft--;
+  updateTimer();
+  if(timeLeft<=0){
+    streak=0;
+    clearInterval(timerInterval);
+    nextQuestion();
+  }
+}
+
+function updateScore(){
+  document.getElementById("scoreBoard").innerText=`Score: ${score} | Streak: ${streak}`;
+}
+
+function updateTimer(){
+  document.getElementById("timer").innerText=`Time: ${timeLeft}`;
+}
+
+</script>
+</body>
+</html>
